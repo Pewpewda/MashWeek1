@@ -2,20 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro; // Required for TextMeshPro
+
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 2f;
+    public float moveSpeed = 5f;
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Vector2 moveDirection;
-    private int soldiersPickedUp = 0; // Counter for picked-up soldiers
+    private bool isCarryingSoldier = false;
+    private int soldiersDelivered = 0;
+
+    public TextMeshProUGUI soldierText; // UI text reference
+    public TextMeshProUGUI carriedText; // UI text reference
 
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 0; // No gravity effect
+        rb.gravityScale = 0;
+
+        // Initialize UI
+        UpdateUI();
     }
 
     void Update()
@@ -44,13 +53,31 @@ public class PlayerMovement : MonoBehaviour
         if (collision.CompareTag("Tree"))
         {
             Debug.Log("Game Over! You hit a tree.");
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Restart the game
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
-        else if (collision.CompareTag("Soldier"))
+        else if (collision.CompareTag("Soldier") && !isCarryingSoldier)
         {
             Debug.Log("Soldier picked up!");
-            soldiersPickedUp++; // Increase the counter
-            Destroy(collision.gameObject); // Remove the soldier from the scene
+            isCarryingSoldier = true;
+            Destroy(collision.gameObject);
+            UpdateUI();
         }
+        else if (collision.CompareTag("Base") && isCarryingSoldier)
+        {
+            Debug.Log("Soldier delivered to base!");
+            isCarryingSoldier = false;
+            soldiersDelivered++;
+            UpdateUI();
+        }
+    }
+
+    void UpdateUI()
+    {
+        // Update UI text
+        if (soldierText != null)
+            soldierText.text = "Soldiers Delivered: " + soldiersDelivered;
+
+        if (carriedText != null)
+            carriedText.text = "Carrying: " + (isCarryingSoldier ? "1 Soldier" : "None");
     }
 }
