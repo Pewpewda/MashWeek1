@@ -7,12 +7,14 @@ using TMPro; // Required for TextMeshPro
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 2f;
+    public float initialMoveSpeed = 5f;  // Set an initial speed
+    private float moveSpeed;
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Vector2 moveDirection;
     private bool isCarryingSoldier = false;
     private int soldiersDelivered = 0;
+    private int soldiersCarried = 0;  // Track how many soldiers are being carried
     private bool gameWon = false;  // Track if the game is won
 
     public TextMeshProUGUI soldierText; // UI text reference
@@ -25,6 +27,7 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
 
+        moveSpeed = initialMoveSpeed; // Set initial speed
         // Initialize UI
         UpdateUI();
         winText.SetActive(false);  // Hide the win message initially
@@ -72,22 +75,24 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("Game Over! You hit a tree.");
             RestartGame();  // Restart when hitting a tree
         }
-        else if (collision.CompareTag("Soldier") && !isCarryingSoldier)
+        else if (collision.CompareTag("Soldier") && soldiersCarried < 3)
         {
             Debug.Log("Soldier picked up!");
-            isCarryingSoldier = true;
+            soldiersCarried++;  // Increase the number of soldiers carried
+            moveSpeed = Mathf.Max(initialMoveSpeed - soldiersCarried * 1f, 1f);  // Reduce speed after picking up a soldier (speed can't go below 1)
             Destroy(collision.gameObject);
             UpdateUI();
         }
-        else if (collision.CompareTag("Base") && isCarryingSoldier)
+        else if (collision.CompareTag("Base") && soldiersCarried > 0)
         {
             Debug.Log("Soldier delivered to base!");
-            isCarryingSoldier = false;
-            soldiersDelivered++;
+            soldiersDelivered += soldiersCarried;  // Add the carried soldiers to delivered
+            soldiersCarried = 0;  // Reset carried soldiers
+            moveSpeed = initialMoveSpeed;  // Reset speed to initial value
             UpdateUI();
 
             // Check if the player has delivered all 3 soldiers
-            if (soldiersDelivered >= 3)
+            if (soldiersDelivered >= 7)
             {
                 WinGame();
             }
@@ -101,7 +106,7 @@ public class PlayerMovement : MonoBehaviour
             soldierText.text = "Soldiers Delivered: " + soldiersDelivered;
 
         if (carriedText != null)
-            carriedText.text = "Carrying: " + (isCarryingSoldier ? "1 Soldier" : "None");
+            carriedText.text = "Carrying: " + soldiersCarried + " Soldier" + (soldiersCarried != 1 ? "s" : "");
     }
 
     // Call this method when the game is won
@@ -118,10 +123,13 @@ public class PlayerMovement : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Reload the current scene
         Time.timeScale = 1f;  // Reset the time scale to normal
         soldiersDelivered = 0;  // Reset soldier count
+        soldiersCarried = 0;  // Reset carried soldier count
         isCarryingSoldier = false;  // Reset carry state
+        moveSpeed = initialMoveSpeed;  // Reset speed to initial value
         UpdateUI();  // Update UI after restart
         winText.SetActive(false);  // Hide the "You WIN" message
         gameWon = false;  // Reset game state
     }
 }
+
 
