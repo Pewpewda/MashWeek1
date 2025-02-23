@@ -7,7 +7,7 @@ using TMPro; // Required for TextMeshPro
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 5f;
+    public float moveSpeed = 2f;
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Vector2 moveDirection;
