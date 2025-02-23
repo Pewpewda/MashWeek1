@@ -13,9 +13,11 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 moveDirection;
     private bool isCarryingSoldier = false;
     private int soldiersDelivered = 0;
+    private bool gameWon = false;  // Track if the game is won
 
     public TextMeshProUGUI soldierText; // UI text reference
     public TextMeshProUGUI carriedText; // UI text reference
+    public GameObject winText;         // Reference to the "You WIN" text UI
 
     void Start()
     {
@@ -25,10 +27,14 @@ public class PlayerMovement : MonoBehaviour
 
         // Initialize UI
         UpdateUI();
+        winText.SetActive(false);  // Hide the win message initially
     }
 
     void Update()
     {
+        if (gameWon)
+            return;  // Stop movement and actions after the game is won
+
         float moveX = 0f;
         float moveY = 0f;
 
@@ -45,7 +51,8 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.velocity = moveDirection * moveSpeed;
+        if (!gameWon)
+            rb.velocity = moveDirection * moveSpeed;
     }
 
     void OnTriggerEnter2D(Collider2D collision)
@@ -53,7 +60,7 @@ public class PlayerMovement : MonoBehaviour
         if (collision.CompareTag("Tree"))
         {
             Debug.Log("Game Over! You hit a tree.");
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Restart the scene
         }
         else if (collision.CompareTag("Soldier") && !isCarryingSoldier)
         {
@@ -68,6 +75,12 @@ public class PlayerMovement : MonoBehaviour
             isCarryingSoldier = false;
             soldiersDelivered++;
             UpdateUI();
+
+            // Check if the player has delivered all 3 soldiers
+            if (soldiersDelivered >= 3)
+            {
+                WinGame();
+            }
         }
     }
 
@@ -80,4 +93,13 @@ public class PlayerMovement : MonoBehaviour
         if (carriedText != null)
             carriedText.text = "Carrying: " + (isCarryingSoldier ? "1 Soldier" : "None");
     }
+
+    // Call this method when the game is won
+    void WinGame()
+    {
+        gameWon = true;  // Set gameWon to true
+        winText.SetActive(true);  // Show the "You WIN" message
+        Time.timeScale = 0f;  // Stop the game (pause)
+    }
 }
+
