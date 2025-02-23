@@ -32,8 +32,18 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // Check for restart key (R) at any time
+        if (Input.GetKey(KeyCode.R))
+        {
+            RestartGame(); // Call the restart function
+            return;  // Prevent further actions when restarting
+        }
+
         if (gameWon)
-            return;  // Stop movement and actions after the game is won
+        {
+            // Stop movement and actions after the game is won
+            return;
+        }
 
         float moveX = 0f;
         float moveY = 0f;
@@ -60,7 +70,7 @@ public class PlayerMovement : MonoBehaviour
         if (collision.CompareTag("Tree"))
         {
             Debug.Log("Game Over! You hit a tree.");
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Restart the scene
+            RestartGame();  // Restart when hitting a tree
         }
         else if (collision.CompareTag("Soldier") && !isCarryingSoldier)
         {
@@ -100,6 +110,18 @@ public class PlayerMovement : MonoBehaviour
         gameWon = true;  // Set gameWon to true
         winText.SetActive(true);  // Show the "You WIN" message
         Time.timeScale = 0f;  // Stop the game (pause)
+    }
+
+    // Restart the game
+    void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);  // Reload the current scene
+        Time.timeScale = 1f;  // Reset the time scale to normal
+        soldiersDelivered = 0;  // Reset soldier count
+        isCarryingSoldier = false;  // Reset carry state
+        UpdateUI();  // Update UI after restart
+        winText.SetActive(false);  // Hide the "You WIN" message
+        gameWon = false;  // Reset game state
     }
 }
 
